@@ -14,6 +14,8 @@ import com.dtp.core.context.BaseNotifyCtx;
 import com.dtp.core.context.DtpNotifyCtxHolder;
 import com.dtp.core.notify.alarm.AlarmCounter;
 import com.dtp.core.notify.base.Notifier;
+import com.dtp.core.notify.thred.CapturedBlockingQueue;
+import com.dtp.core.notify.thred.CapturedDtpExecutor;
 import com.dtp.core.support.ExecutorWrapper;
 import com.dtp.core.thread.DtpExecutor;
 import com.dtp.core.support.ExecutorAdapter;
@@ -29,6 +31,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -126,7 +129,7 @@ public abstract class AbstractDtpNotifier implements DtpNotifier {
                 executor.getTaskCount(),
                 executor.getCompletedTaskCount(),
                 executor.getQueue().size(),
-                executor.getQueue().getClass().getSimpleName(),
+                getQueueSimpleName(executor.getQueue()),
                 getQueueCapacity(executor),
                 executor.getQueue().size(),
                 executor.getQueue().remainingCapacity(),
@@ -159,7 +162,7 @@ public abstract class AbstractDtpNotifier implements DtpNotifier {
                 oldFields.getMaxPoolSize(), executor.getMaximumPoolSize(),
                 oldFields.isAllowCoreThreadTimeOut(), executor.allowsCoreThreadTimeOut(),
                 oldFields.getKeepAliveTime(), executor.getKeepAliveTime(TimeUnit.SECONDS),
-                executor.getQueue().getClass().getSimpleName(),
+                getQueueSimpleName(executor.getQueue()),
                 oldFields.getQueueCapacity(), getQueueCapacity(executor),
                 oldFields.getRejectType(), getRejectHandlerName(executor),
                 receivesStr,
@@ -201,9 +204,16 @@ public abstract class AbstractDtpNotifier implements DtpNotifier {
         return executor.getRejectHandlerName();
     }
 
+    protected String getQueueSimpleName(BlockingQueue<Runnable> queue) {
+        if (queue instanceof CapturedBlockingQueue) {
+            return ((CapturedBlockingQueue) queue).getSimpleName();
+        }
+        return queue.getClass().getSimpleName();
+    }
+
     protected int getQueueCapacity(ExecutorAdapter<?> executor) {
-        if (executor instanceof DtpExecutor) {
-            return ((DtpExecutor) executor).getQueueCapacity();
+        if (executor instanceof CapturedDtpExecutor) {
+            return ((CapturedDtpExecutor) executor).getQueueCapacity();
         }
         return executor.getQueue().size() + executor.getQueue().remainingCapacity();
     }

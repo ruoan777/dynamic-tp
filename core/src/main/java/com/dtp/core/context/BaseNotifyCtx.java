@@ -21,7 +21,7 @@ public class BaseNotifyCtx {
     public BaseNotifyCtx() { }
 
     public BaseNotifyCtx(ExecutorWrapper wrapper, NotifyItem notifyItem) {
-        this.executorWrapper = wrapper;
+        this.executorWrapper = ExecutorWrapper.replaceExecutorWithCapturedDtpExecutor(wrapper);
         this.notifyItem = notifyItem;
     }
 

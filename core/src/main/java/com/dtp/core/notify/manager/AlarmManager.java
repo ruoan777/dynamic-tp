@@ -11,6 +11,8 @@ import com.dtp.core.context.AlarmCtx;
 import com.dtp.core.context.BaseNotifyCtx;
 import com.dtp.core.notify.alarm.AlarmCounter;
 import com.dtp.core.notify.alarm.AlarmLimiter;
+import com.dtp.core.notify.thred.CapturedBlockingQueue;
+import com.dtp.core.notify.thred.CapturedDtpExecutor;
 import com.dtp.core.support.ExecutorWrapper;
 import com.dtp.core.support.runnable.DtpRunnable;
 import com.dtp.core.thread.DtpExecutor;
@@ -20,7 +22,6 @@ import org.slf4j.MDC;
 import org.springframework.util.CollectionUtils;
 
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 
 import static com.dtp.common.constant.DynamicTpConst.TRACE_ID;
@@ -98,21 +99,30 @@ public class AlarmManager {
     }
 
     private static boolean checkLiveness(ExecutorWrapper executorWrapper, NotifyItem notifyItem) {
-        val executor = executorWrapper.getExecutor();
+        if (!(executorWrapper.getExecutor() instanceof CapturedDtpExecutor)) {
+            return false;
+        }
+        CapturedDtpExecutor executor = (CapturedDtpExecutor) executorWrapper.getExecutor();
+
         int maximumPoolSize = executor.getMaximumPoolSize();
         double div = NumberUtil.div(executor.getActiveCount(), maximumPoolSize, 2) * 100;
         return div >= notifyItem.getThreshold();
     }
 
     private static boolean checkCapacity(ExecutorWrapper executorWrapper, NotifyItem notifyItem) {
-
-        val executor = executorWrapper.getExecutor();
-        BlockingQueue<Runnable> workQueue = executor.getQueue();
+        if (!(executorWrapper.getExecutor() instanceof CapturedDtpExecutor)) {
+            return false;
+        }
+        CapturedDtpExecutor executor = (CapturedDtpExecutor) executorWrapper.getExecutor();
+        if (!(executor.getQueue() instanceof CapturedBlockingQueue)) {
+            return false;
+        }
+        CapturedBlockingQueue workQueue = (CapturedBlockingQueue) executor.getQueue();
         if (CollectionUtils.isEmpty(workQueue)) {
             return false;
         }
 
-        int queueCapacity = executor.getQueue().size() + executor.getQueue().remainingCapacity();
+        int queueCapacity = executor.getQueueCapacity();
         double div = NumberUtil.div(workQueue.size(), queueCapacity, 2) * 100;
         return div >= notifyItem.getThreshold();
     }

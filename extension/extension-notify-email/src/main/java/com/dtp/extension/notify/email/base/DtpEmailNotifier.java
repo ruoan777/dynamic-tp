@@ -13,6 +13,7 @@ import com.dtp.core.context.AlarmCtx;
 import com.dtp.core.context.BaseNotifyCtx;
 import com.dtp.core.context.DtpNotifyCtxHolder;
 import com.dtp.core.notify.AbstractDtpNotifier;
+import com.dtp.core.notify.thred.CapturedDtpExecutor;
 import com.dtp.core.notify.alarm.AlarmCounter;
 import com.dtp.core.support.ExecutorWrapper;
 import lombok.extern.slf4j.Slf4j;
@@ -67,7 +68,7 @@ public class DtpEmailNotifier extends AbstractDtpNotifier {
     protected String buildAlarmContent(NotifyPlatform platform, NotifyItemEnum notifyItemEnum) {
         AlarmCtx alarmCtx = (AlarmCtx) DtpNotifyCtxHolder.get();
         ExecutorWrapper executorWrapper = alarmCtx.getExecutorWrapper();
-        val executor = executorWrapper.getExecutor();
+        CapturedDtpExecutor executor = (CapturedDtpExecutor) executorWrapper.getExecutor();
         NotifyItem notifyItem = alarmCtx.getNotifyItem();
         AlarmInfo alarmInfo = alarmCtx.getAlarmInfo();
 
@@ -85,7 +86,7 @@ public class DtpEmailNotifier extends AbstractDtpNotifier {
         context.setVariable("taskCount", executor.getTaskCount());
         context.setVariable("completedTaskCount", executor.getCompletedTaskCount());
         context.setVariable("waitingTaskCount", executor.getQueue().size());
-        context.setVariable("queueType", executor.getQueue().getClass().getSimpleName());
+        context.setVariable("queueType", getQueueSimpleName(executor.getQueue()));
         context.setVariable("queueCapacity", getQueueCapacity(executor));
         context.setVariable("queueSize", executor.getQueue().size());
         context.setVariable("queueRemaining", executor.getQueue().remainingCapacity());
@@ -116,7 +117,7 @@ public class DtpEmailNotifier extends AbstractDtpNotifier {
         context.setVariable("newIsAllowCoreThreadTimeOut", executor.allowsCoreThreadTimeOut());
         context.setVariable("oldKeepAliveTime", oldFields.getKeepAliveTime());
         context.setVariable("newKeepAliveTime", executor.getKeepAliveTime(TimeUnit.SECONDS));
-        context.setVariable("queueType", executor.getQueue().getClass().getSimpleName());
+        context.setVariable("queueType", getQueueSimpleName(executor.getQueue()));
         context.setVariable("oldQueueCapacity", oldFields.getQueueCapacity());
         context.setVariable("newQueueCapacity", getQueueCapacity(executor));
         context.setVariable("oldRejectType", oldFields.getRejectType());
