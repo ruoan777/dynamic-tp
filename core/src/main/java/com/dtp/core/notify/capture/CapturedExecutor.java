@@ -3,38 +3,26 @@ package com.dtp.core.notify.capture;
 import com.dtp.core.context.BaseNotifyCtx;
 import com.dtp.core.notify.AbstractDtpNotifier;
 import com.dtp.core.notify.manager.AlarmManager;
-import com.dtp.core.spring.DtpLifecycleSupport;
 import com.dtp.core.support.ExecutorAdapter;
 import com.dtp.core.thread.DtpExecutor;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.LongAdder;
 
 /**
- * CapturedDtpExecutor implements ExecutorAdapter, the goal of this class
+ * CapturedExecutor implements ExecutorAdapter, the goal of this class
  * is to capture DtpExecutor's status when construct {@link BaseNotifyCtx} during {@link AlarmManager#doAlarm}.
  * <p>
  * In other words, this can ensure that the thread pool status when the alarm threshold is triggered is
  * consistent with the content in the {@link AbstractDtpNotifier#buildAlarmContent(com.dtp.common.entity.NotifyPlatform, com.dtp.common.em.NotifyItemEnum)}
  *
  * @author ruoan
- * @since 1.1.2
+ * @since 1.1.3
  */
-public class CapturedDtpExecutor implements ExecutorAdapter<DtpExecutor> {
+public final class CapturedExecutor implements ExecutorAdapter<ExecutorAdapter<?>> {
 
-    private final DtpExecutor originExecutor;
-
-    /**
-     * @see DtpLifecycleSupport#threadPoolName
-     */
-    private final String threadPoolName;
-
-    /**
-     * @see DtpExecutor#threadPoolAliasName
-     */
-    private final String threadPoolAliasName;
+    private final ExecutorAdapter<?> originExecutor;
 
     private final int corePoolSize;
 
@@ -66,25 +54,8 @@ public class CapturedDtpExecutor implements ExecutorAdapter<DtpExecutor> {
      */
     private final BlockingQueue<Runnable> blockingQueue;
 
-    /**
-     * @see DtpExecutor#rejectCount
-     */
-    private final long rejectCount;
-
-    /**
-     * @see DtpExecutor#runTimeoutCount
-     */
-    private final LongAdder runTimeoutCount;
-
-    /**
-     * @see DtpExecutor#queueTimeoutCount
-     */
-    private final LongAdder queueTimeoutCount;
-
-    public CapturedDtpExecutor(DtpExecutor dtpExecutor) {
+    public CapturedExecutor(ExecutorAdapter<?> dtpExecutor) {
         this.originExecutor = dtpExecutor;
-        this.threadPoolName = dtpExecutor.getThreadPoolName();
-        this.threadPoolAliasName = dtpExecutor.getThreadPoolAliasName();
         this.corePoolSize = dtpExecutor.getCorePoolSize();
         this.maximumPoolSize = dtpExecutor.getMaximumPoolSize();
         this.activeCount = dtpExecutor.getActiveCount();
@@ -92,18 +63,15 @@ public class CapturedDtpExecutor implements ExecutorAdapter<DtpExecutor> {
         this.largestPoolSize = dtpExecutor.getLargestPoolSize();
         this.taskCount = dtpExecutor.getTaskCount();
         this.completedTaskCount = dtpExecutor.getCompletedTaskCount();
-        this.keepAliveTime = dtpExecutor.getKeepAliveTime(TimeUnit.NANOSECONDS);
+        this.keepAliveTime = dtpExecutor.getKeepAliveTime(TimeUnit.SECONDS);
         this.allowCoreThreadTimeOut = dtpExecutor.allowsCoreThreadTimeOut();
         this.rejectedExecutionHandler = dtpExecutor.getRejectedExecutionHandler();
         this.rejectHandlerName = dtpExecutor.getRejectHandlerName();
         this.blockingQueue = new CapturedBlockingQueue(dtpExecutor.getQueue());
-        this.rejectCount = dtpExecutor.getRejectCount();
-        this.runTimeoutCount = dtpExecutor.getRunTimeoutCount();
-        this.queueTimeoutCount = dtpExecutor.getQueueTimeoutCount();
     }
 
     @Override
-    public DtpExecutor getOriginal() {
+    public ExecutorAdapter<?> getOriginal() {
         return originExecutor;
     }
 
@@ -189,36 +157,11 @@ public class CapturedDtpExecutor implements ExecutorAdapter<DtpExecutor> {
 
     @Override
     public long getKeepAliveTime(TimeUnit unit) {
-        return unit.convert(keepAliveTime, TimeUnit.NANOSECONDS);
+        return unit.convert(keepAliveTime, TimeUnit.SECONDS);
     }
 
     @Override
     public void setKeepAliveTime(long time, TimeUnit unit) {
         throw new UnsupportedOperationException();
-    }
-
-    public String getThreadPoolName() {
-        return threadPoolName;
-    }
-
-    public String getThreadPoolAliasName() {
-        return threadPoolAliasName;
-    }
-
-    public long getRejectCount() {
-        return rejectCount;
-    }
-
-    public LongAdder getRunTimeoutCount() {
-        return runTimeoutCount;
-    }
-
-    public LongAdder getQueueTimeoutCount() {
-        return queueTimeoutCount;
-    }
-
-    public int getQueueCapacity() {
-        int capacity = getQueue().size() + getQueue().remainingCapacity();
-        return capacity < 0 ? Integer.MAX_VALUE : capacity;
     }
 }

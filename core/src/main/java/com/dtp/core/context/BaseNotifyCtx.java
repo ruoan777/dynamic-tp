@@ -1,8 +1,9 @@
 package com.dtp.core.context;
 
-import com.dtp.core.support.ExecutorWrapper;
-import com.dtp.common.entity.NotifyItem;
 import com.dtp.common.em.NotifyItemEnum;
+import com.dtp.common.entity.NotifyItem;
+import com.dtp.core.notify.capture.CapturedExecutor;
+import com.dtp.core.support.ExecutorWrapper;
 import lombok.Data;
 
 /**
@@ -16,12 +17,16 @@ public class BaseNotifyCtx {
 
     private ExecutorWrapper executorWrapper;
 
+    private CapturedExecutor capturedExecutor;
+
     private NotifyItem notifyItem;
 
-    public BaseNotifyCtx() { }
+    public BaseNotifyCtx() {
+    }
 
     public BaseNotifyCtx(ExecutorWrapper wrapper, NotifyItem notifyItem) {
-        this.executorWrapper = ExecutorWrapper.replaceExecutorWithCapturedDtpExecutor(wrapper);
+        this.executorWrapper = wrapper;
+        this.capturedExecutor = new CapturedExecutor(wrapper.getExecutor());
         this.notifyItem = notifyItem;
     }
 

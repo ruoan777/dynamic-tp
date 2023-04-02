@@ -5,9 +5,9 @@ import cn.hutool.core.date.DateUtil;
 import com.dtp.common.em.NotifyItemEnum;
 import com.dtp.common.em.NotifyPlatformEnum;
 import com.dtp.common.entity.AlarmInfo;
-import com.dtp.common.entity.TpMainFields;
 import com.dtp.common.entity.NotifyItem;
 import com.dtp.common.entity.NotifyPlatform;
+import com.dtp.common.entity.TpMainFields;
 import com.dtp.common.util.CommonUtil;
 import com.dtp.core.context.AlarmCtx;
 import com.dtp.core.context.BaseNotifyCtx;
@@ -15,13 +15,14 @@ import com.dtp.core.context.DtpNotifyCtxHolder;
 import com.dtp.core.notify.alarm.AlarmCounter;
 import com.dtp.core.notify.base.Notifier;
 import com.dtp.core.notify.capture.CapturedBlockingQueue;
-import com.dtp.core.notify.capture.CapturedDtpExecutor;
+import com.dtp.core.notify.capture.CapturedExecutor;
+import com.dtp.core.support.ExecutorAdapter;
 import com.dtp.core.support.ExecutorWrapper;
 import com.dtp.core.thread.DtpExecutor;
-import com.dtp.core.support.ExecutorAdapter;
 import com.google.common.base.Joiner;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import lombok.var;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.MDC;
@@ -37,9 +38,7 @@ import java.util.stream.Collectors;
 
 import static com.dtp.common.constant.DynamicTpConst.TRACE_ID;
 import static com.dtp.common.constant.DynamicTpConst.UNKNOWN;
-import static com.dtp.common.constant.LarkNotifyConst.LARK_AT_FORMAT_OPENID;
-import static com.dtp.common.constant.LarkNotifyConst.LARK_AT_FORMAT_USERNAME;
-import static com.dtp.common.constant.LarkNotifyConst.LARK_OPENID_PREFIX;
+import static com.dtp.common.constant.LarkNotifyConst.*;
 import static com.dtp.core.notify.manager.NotifyHelper.getAlarmKeys;
 import static com.dtp.core.notify.manager.NotifyHelper.getAllAlarmKeys;
 
@@ -105,6 +104,7 @@ public abstract class AbstractDtpNotifier implements DtpNotifier {
     protected String buildAlarmContent(NotifyPlatform platform, NotifyItemEnum notifyItemEnum) {
         AlarmCtx context = (AlarmCtx) DtpNotifyCtxHolder.get();
         ExecutorWrapper executorWrapper = context.getExecutorWrapper();
+        var capturedExecutor = context.getCapturedExecutor();
         String threadPoolName = executorWrapper.getThreadPoolName();
         val executor = executorWrapper.getExecutor();
         NotifyItem notifyItem = context.getNotifyItem();
@@ -188,11 +188,12 @@ public abstract class AbstractDtpNotifier implements DtpNotifier {
 
     protected String populatePoolName(ExecutorWrapper executorWrapper) {
 
-        String poolAlisaName;
-        if (executorWrapper.getExecutor() instanceof DtpExecutor) {
-            poolAlisaName = ((DtpExecutor) executorWrapper.getExecutor()).getThreadPoolAliasName();
-        } else {
-            poolAlisaName = executorWrapper.getThreadPoolAliasName();
+        String poolAlisaName = executorWrapper.getThreadPoolAliasName();
+        if (executorWrapper.getExecutor() instanceof CapturedExecutor) {
+            CapturedExecutor capturedExecutor = (CapturedExecutor) executorWrapper.getExecutor();
+            if (capturedExecutor.getOriginal() instanceof DtpExecutor) {
+                poolAlisaName = ((DtpExecutor) capturedExecutor.getOriginal()).getThreadPoolAliasName();
+            }
         }
         if (StringUtils.isBlank(poolAlisaName)) {
             return executorWrapper.getThreadPoolName();
@@ -212,9 +213,6 @@ public abstract class AbstractDtpNotifier implements DtpNotifier {
     }
 
     protected int getQueueCapacity(ExecutorAdapter<?> executor) {
-        if (executor instanceof CapturedDtpExecutor) {
-            return ((CapturedDtpExecutor) executor).getQueueCapacity();
-        }
         return executor.getQueue().size() + executor.getQueue().remainingCapacity();
     }
 

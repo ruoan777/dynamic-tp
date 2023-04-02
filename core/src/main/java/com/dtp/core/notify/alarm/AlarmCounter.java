@@ -2,8 +2,9 @@ package com.dtp.core.notify.alarm;
 
 import com.dtp.common.em.NotifyItemEnum;
 import com.dtp.common.entity.AlarmInfo;
-import com.dtp.core.notify.capture.CapturedDtpExecutor;
+import com.dtp.core.notify.capture.CapturedExecutor;
 import com.dtp.core.support.ExecutorAdapter;
+import com.dtp.core.thread.DtpExecutor;
 import lombok.val;
 import lombok.var;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
@@ -69,11 +70,16 @@ public class AlarmCounter {
 
     public static Triple<String, String, String> countStrRrq(String threadPoolName, ExecutorAdapter<?> executor) {
 
-        if (!(executor instanceof CapturedDtpExecutor)) {
+        if (!(executor instanceof CapturedExecutor)) {
             return new ImmutableTriple<>(DEFAULT_COUNT_STR, DEFAULT_COUNT_STR, DEFAULT_COUNT_STR);
         }
 
-        CapturedDtpExecutor dtpExecutor = (CapturedDtpExecutor) executor;
+        var originalExecutor = ((CapturedExecutor) executor).getOriginal();
+        if (!(originalExecutor instanceof DtpExecutor)) {
+            return new ImmutableTriple<>(DEFAULT_COUNT_STR, DEFAULT_COUNT_STR, DEFAULT_COUNT_STR);
+        }
+
+        var dtpExecutor = (DtpExecutor) originalExecutor;
         String rejectCount = getCount(threadPoolName, REJECT.getValue()) + " / " + dtpExecutor.getRejectCount();
         String runTimeoutCount = getCount(threadPoolName, RUN_TIMEOUT.getValue()) + " / "
                 + dtpExecutor.getRunTimeoutCount().sum();

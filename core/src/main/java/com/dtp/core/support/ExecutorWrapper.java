@@ -2,7 +2,7 @@ package com.dtp.core.support;
 
 import com.dtp.common.em.NotifyItemEnum;
 import com.dtp.common.entity.NotifyItem;
-import com.dtp.core.notify.capture.CapturedDtpExecutor;
+import com.dtp.core.notify.capture.CapturedExecutor;
 import com.dtp.core.thread.DtpExecutor;
 import lombok.Data;
 
@@ -56,27 +56,7 @@ public class ExecutorWrapper {
         this.notifyItems = NotifyItem.getSimpleNotifyItems();
     }
 
-    private ExecutorWrapper(CapturedDtpExecutor captureDtpExecutor) {
-        this.threadPoolName = captureDtpExecutor.getThreadPoolName();
-        this.threadPoolAliasName = captureDtpExecutor.getThreadPoolAliasName();
-        this.executor = captureDtpExecutor;
-        this.notifyItems = captureDtpExecutor.getOriginal().getNotifyItems();
-        this.notifyEnabled = captureDtpExecutor.getOriginal().isNotifyEnabled();
-    }
-
     public static ExecutorWrapper of(DtpExecutor executor) {
         return new ExecutorWrapper(executor);
-    }
-
-    /**
-     * used just for {@link com.dtp.core.context.BaseNotifyCtx}
-     */
-    public static ExecutorWrapper replaceExecutorWithCapturedDtpExecutor(ExecutorWrapper wrapper) {
-        if (!(wrapper.getExecutor() instanceof DtpExecutor)) {
-            return wrapper;
-        }
-        DtpExecutor executor = (DtpExecutor) wrapper.getExecutor();
-        CapturedDtpExecutor captureDtpExecutor = new CapturedDtpExecutor(executor);
-        return new ExecutorWrapper(captureDtpExecutor);
     }
 }

@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * @author ruoan
- * @since 1.1.2
+ * @since 1.1.3
  */
 public class CapturedBlockingQueue extends AbstractQueue<Runnable> implements BlockingQueue<Runnable> {
 
