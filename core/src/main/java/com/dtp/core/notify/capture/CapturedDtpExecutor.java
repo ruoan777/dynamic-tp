@@ -1,4 +1,4 @@
-package com.dtp.core.notify.thred;
+package com.dtp.core.notify.capture;
 
 import com.dtp.core.context.BaseNotifyCtx;
 import com.dtp.core.notify.AbstractDtpNotifier;

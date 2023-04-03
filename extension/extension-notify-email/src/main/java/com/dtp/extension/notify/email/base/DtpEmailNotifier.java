@@ -13,7 +13,7 @@ import com.dtp.core.context.AlarmCtx;
 import com.dtp.core.context.BaseNotifyCtx;
 import com.dtp.core.context.DtpNotifyCtxHolder;
 import com.dtp.core.notify.AbstractDtpNotifier;
-import com.dtp.core.notify.thred.CapturedDtpExecutor;
+import com.dtp.core.notify.capture.CapturedDtpExecutor;
 import com.dtp.core.notify.alarm.AlarmCounter;
 import com.dtp.core.support.ExecutorWrapper;
 import lombok.extern.slf4j.Slf4j;
