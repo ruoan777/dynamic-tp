@@ -2,7 +2,7 @@ package com.dtp.core.notify.alarm;
 
 import com.dtp.common.em.NotifyItemEnum;
 import com.dtp.common.entity.AlarmInfo;
-import com.dtp.core.notify.thred.CapturedDtpExecutor;
+import com.dtp.core.notify.capture.CapturedDtpExecutor;
 import com.dtp.core.support.ExecutorAdapter;
 import lombok.val;
 import lombok.var;

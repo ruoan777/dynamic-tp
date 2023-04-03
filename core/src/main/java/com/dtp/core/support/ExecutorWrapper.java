@@ -2,7 +2,7 @@ package com.dtp.core.support;
 
 import com.dtp.common.em.NotifyItemEnum;
 import com.dtp.common.entity.NotifyItem;
-import com.dtp.core.notify.thred.CapturedDtpExecutor;
+import com.dtp.core.notify.capture.CapturedDtpExecutor;
 import com.dtp.core.thread.DtpExecutor;
 import lombok.Data;
 
@@ -72,7 +72,7 @@ public class ExecutorWrapper {
      * used just for {@link com.dtp.core.context.BaseNotifyCtx}
      */
     public static ExecutorWrapper replaceExecutorWithCapturedDtpExecutor(ExecutorWrapper wrapper) {
-        if (!((wrapper.getExecutor()) instanceof DtpExecutor)) {
+        if (!(wrapper.getExecutor() instanceof DtpExecutor)) {
             return wrapper;
         }
         DtpExecutor executor = (DtpExecutor) wrapper.getExecutor();

@@ -1,4 +1,4 @@
-package com.dtp.core.notify.thred;
+package com.dtp.core.notify.capture;
 
 import java.util.AbstractQueue;
 import java.util.Collection;
